@@ -58,6 +58,16 @@ namespace Emby.Server.Implementations.SyncPlay
             new Dictionary<string, GroupMember>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
+        /// The chat message history for the group.
+        /// </summary>
+        private readonly List<ChatMessageDto> _chatMessages = new List<ChatMessageDto>();
+
+        /// <summary>
+        /// The maximum number of chat messages to keep in memory.
+        /// </summary>
+        private const int MaxChatMessages = 100;
+
+        /// <summary>
         /// The internal group state.
         /// </summary>
         private IGroupState _state;
@@ -299,6 +309,9 @@ namespace Emby.Server.Implementations.SyncPlay
 
             _state.SessionJoined(this, _state.Type, session, cancellationToken);
 
+            // Send system message about user joining
+            SendSystemMessage(session, $"{session.UserName} joined the group", cancellationToken);
+
             _logger.LogInformation("Session {SessionId} joined group {GroupId}.", session.Id, GroupId.ToString());
         }
 
@@ -320,7 +333,79 @@ namespace Emby.Server.Implementations.SyncPlay
             var updateOthers = new SyncPlayUserLeftUpdate(GroupId, session.UserName);
             SendGroupUpdate(session, SyncPlayBroadcastType.AllExceptCurrentSession, updateOthers, cancellationToken);
 
+            // Send system message about user leaving
+            SendSystemMessage(session, $"{session.UserName} left the group", cancellationToken);
+
             _logger.LogInformation("Session {SessionId} left group {GroupId}.", session.Id, GroupId.ToString());
+        }
+
+        /// <summary>
+        /// Sends a chat message to the group.
+        /// </summary>
+        /// <param name="session">The session sending the message.</param>
+        /// <param name="message">The message content.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        public void SendChatMessage(SessionInfo session, string message, CancellationToken cancellationToken)
+        {
+            var chatMessage = new ChatMessageDto(
+                Guid.NewGuid(),
+                GroupId,
+                session.UserId,
+                session.UserName,
+                message,
+                DateTime.UtcNow,
+                false);
+
+            _chatMessages.Add(chatMessage);
+
+            // Keep only the last MaxChatMessages messages
+            if (_chatMessages.Count > MaxChatMessages)
+            {
+                _chatMessages.RemoveAt(0);
+            }
+
+            var update = new SyncPlayChatMessageUpdate(GroupId, chatMessage);
+            SendGroupUpdate(session, SyncPlayBroadcastType.AllGroup, update, cancellationToken);
+
+            _logger.LogInformation("Session {SessionId} sent chat message in group {GroupId}.", session.Id, GroupId.ToString());
+        }
+
+        /// <summary>
+        /// Sends a system message to the group.
+        /// </summary>
+        /// <param name="session">The session that triggered the system message.</param>
+        /// <param name="message">The system message content.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        private void SendSystemMessage(SessionInfo session, string message, CancellationToken cancellationToken)
+        {
+            var chatMessage = new ChatMessageDto(
+                Guid.NewGuid(),
+                GroupId,
+                Guid.Empty,
+                "System",
+                message,
+                DateTime.UtcNow,
+                true);
+
+            _chatMessages.Add(chatMessage);
+
+            // Keep only the last MaxChatMessages messages
+            if (_chatMessages.Count > MaxChatMessages)
+            {
+                _chatMessages.RemoveAt(0);
+            }
+
+            var update = new SyncPlayChatMessageUpdate(GroupId, chatMessage);
+            SendGroupUpdate(session, SyncPlayBroadcastType.AllGroup, update, cancellationToken);
+        }
+
+        /// <summary>
+        /// Gets the chat message history for the group.
+        /// </summary>
+        /// <returns>The list of chat messages.</returns>
+        public IReadOnlyList<ChatMessageDto> GetChatMessages()
+        {
+            return _chatMessages.AsReadOnly();
         }
 
         /// <summary>

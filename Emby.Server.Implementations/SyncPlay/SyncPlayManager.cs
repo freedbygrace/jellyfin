@@ -315,6 +315,19 @@ namespace Emby.Server.Implementations.SyncPlay
         }
 
         /// <inheritdoc />
+        public IGroupStateContext GetGroup(SessionInfo session)
+        {
+            ArgumentNullException.ThrowIfNull(session);
+
+            if (_sessionToGroupMap.TryGetValue(session.Id, out var group))
+            {
+                return group;
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc />
         public void HandleRequest(SessionInfo session, IGroupPlaybackRequest request, CancellationToken cancellationToken)
         {
             if (session is null)

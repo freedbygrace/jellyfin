@@ -217,5 +217,19 @@ namespace MediaBrowser.Controller.SyncPlay
         /// <param name="reason">The reason for the update.</param>
         /// <returns>The play queue update.</returns>
         PlayQueueUpdate GetPlayQueueUpdate(PlayQueueUpdateReason reason);
+
+        /// <summary>
+        /// Sends a chat message to the group.
+        /// </summary>
+        /// <param name="session">The session sending the message.</param>
+        /// <param name="message">The message content.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        void SendChatMessage(SessionInfo session, string message, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets the chat message history for the group.
+        /// </summary>
+        /// <returns>The list of chat messages.</returns>
+        IReadOnlyList<ChatMessageDto> GetChatMessages();
     }
 }

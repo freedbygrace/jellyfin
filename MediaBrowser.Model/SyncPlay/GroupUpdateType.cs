@@ -48,6 +48,11 @@ namespace MediaBrowser.Model.SyncPlay
         /// <summary>
         /// The library-access-denied error. Sent when a user tries to join a group without required access to the library.
         /// </summary>
-        LibraryAccessDenied
+        LibraryAccessDenied,
+
+        /// <summary>
+        /// The chat-message update. Tells members of a group about a new chat message.
+        /// </summary>
+        ChatMessage
     }
 }

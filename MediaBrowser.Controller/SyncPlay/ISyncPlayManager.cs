@@ -56,6 +56,13 @@ namespace MediaBrowser.Controller.SyncPlay
         GroupInfoDto GetGroup(SessionInfo session, Guid groupId);
 
         /// <summary>
+        /// Gets the group that a session is currently in.
+        /// </summary>
+        /// <param name="session">The session.</param>
+        /// <returns>The group or null if the session is not in a group.</returns>
+        IGroupStateContext GetGroup(SessionInfo session);
+
+        /// <summary>
         /// Handle a request by a session in a group.
         /// </summary>
         /// <param name="session">The session.</param>

@@ -460,4 +460,61 @@ public class SyncPlayController : BaseJellyfinApiController
         _syncPlayManager.HandleRequest(currentSession, syncPlayRequest, CancellationToken.None);
         return NoContent();
     }
+
+    /// <summary>
+    /// Send a chat message to the SyncPlay group.
+    /// </summary>
+    /// <param name="requestData">The chat message request.</param>
+    /// <response code="204">Message sent.</response>
+    /// <response code="404">Group not found.</response>
+    /// <returns>A <see cref="NoContentResult"/> indicating success.</returns>
+    [HttpPost("Chat")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Policies.SyncPlayIsInGroup)]
+    public async Task<ActionResult> SyncPlaySendChatMessage(
+        [FromBody, Required] SendChatMessageRequest requestData)
+    {
+        var currentSession = await RequestHelpers.GetSession(_sessionManager, _userManager, HttpContext).ConfigureAwait(false);
+        var group = _syncPlayManager.GetGroup(currentSession);
+        if (group is null)
+        {
+            return NotFound();
+        }
+
+        lock (group)
+        {
+            group.SendChatMessage(currentSession, requestData.Message, CancellationToken.None);
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Get chat message history for the SyncPlay group.
+    /// </summary>
+    /// <response code="200">Chat messages returned.</response>
+    /// <response code="404">Group not found.</response>
+    /// <returns>An <see cref="IEnumerable{ChatMessageDto}"/> containing the chat message history.</returns>
+    [HttpGet("Chat")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Policies.SyncPlayIsInGroup)]
+    public async Task<ActionResult<IEnumerable<ChatMessageDto>>> SyncPlayGetChatMessages()
+    {
+        var currentSession = await RequestHelpers.GetSession(_sessionManager, _userManager, HttpContext).ConfigureAwait(false);
+        var group = _syncPlayManager.GetGroup(currentSession);
+        if (group is null)
+        {
+            return NotFound();
+        }
+
+        IReadOnlyList<ChatMessageDto> messages;
+        lock (group)
+        {
+            messages = group.GetChatMessages();
+        }
+
+        return Ok(messages.AsEnumerable());
+    }
 }
