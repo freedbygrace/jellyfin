@@ -56,5 +56,12 @@ namespace MediaBrowser.Controller.SyncPlay
         /// </summary>
         /// <value><c>true</c> to ignore member on group wait; <c>false</c> if they're following group playback.</value>
         public bool IgnoreGroupWait { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this member is ready to start playback.
+        /// This is a user-controlled state for lobby coordination, separate from automatic buffering state.
+        /// </summary>
+        /// <value><c>true</c> if member is ready; <c>false</c> otherwise.</value>
+        public bool IsReady { get; set; }
     }
 }

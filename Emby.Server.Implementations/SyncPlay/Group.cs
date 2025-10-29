@@ -409,6 +409,62 @@ namespace Emby.Server.Implementations.SyncPlay
         }
 
         /// <summary>
+        /// Sets the ready state for a session.
+        /// </summary>
+        /// <param name="session">The session.</param>
+        /// <param name="isReady">Whether the session is ready.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        public void SetReady(SessionInfo session, bool isReady, CancellationToken cancellationToken)
+        {
+            if (_participants.TryGetValue(session.Id, out GroupMember value))
+            {
+                value.IsReady = isReady;
+
+                // Check if all members are ready
+                var allReady = AreAllMembersReady();
+
+                // Broadcast ready state change to all group members
+                var readyUpdate = new ReadyUpdateDto(
+                    session.UserId,
+                    session.UserName,
+                    isReady,
+                    allReady);
+
+                var update = new SyncPlayReadyUpdate(GroupId, readyUpdate);
+                SendGroupUpdate(session, SyncPlayBroadcastType.AllGroup, update, cancellationToken);
+
+                _logger.LogInformation(
+                    "Session {SessionId} ready state changed to {IsReady} in group {GroupId}. All ready: {AllReady}",
+                    session.Id,
+                    isReady,
+                    GroupId.ToString(),
+                    allReady);
+            }
+        }
+
+        /// <summary>
+        /// Checks if all members in the group are ready.
+        /// </summary>
+        /// <returns><c>true</c> if all members are ready; <c>false</c> otherwise.</returns>
+        public bool AreAllMembersReady()
+        {
+            if (_participants.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var member in _participants.Values)
+            {
+                if (!member.IsReady)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Handles the requested action by the session.
         /// </summary>
         /// <param name="session">The session.</param>
@@ -445,7 +501,7 @@ namespace Emby.Server.Implementations.SyncPlay
                 member.UserName,
                 member.Ping,
                 member.IsBuffering,
-                !member.IsBuffering)).ToList();
+                member.IsReady)).ToList();
             return new GroupInfoDto(GroupId, GroupName, _state.Type, participants, DateTime.UtcNow, members);
         }
 

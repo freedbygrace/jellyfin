@@ -517,4 +517,35 @@ public class SyncPlayController : BaseJellyfinApiController
 
         return Ok(messages.AsEnumerable());
     }
+
+    /// <summary>
+    /// Set lobby ready state for the current user in the SyncPlay group.
+    /// This is for lobby coordination before playback starts, separate from buffering ready state.
+    /// </summary>
+    /// <param name="requestData">The ready state request.</param>
+    /// <response code="204">Ready state updated.</response>
+    /// <response code="404">Group not found.</response>
+    /// <returns>A <see cref="NoContentResult"/> indicating success.</returns>
+    [HttpPost("LobbyReady")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Policies.SyncPlayIsInGroup)]
+    public async Task<ActionResult> SyncPlaySetLobbyReady(
+        [FromBody, Required] SetReadyRequest requestData)
+    {
+        var currentSession = await RequestHelpers.GetSession(_sessionManager, _userManager, HttpContext).ConfigureAwait(false);
+        var group = _syncPlayManager.GetGroup(currentSession);
+        if (group is null)
+        {
+            return NotFound();
+        }
+
+        lock (group)
+        {
+            group.SetReady(currentSession, requestData.IsReady, CancellationToken.None);
+        }
+
+        return NoContent();
+    }
 }
+

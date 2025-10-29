@@ -53,6 +53,11 @@ namespace MediaBrowser.Model.SyncPlay
         /// <summary>
         /// The chat-message update. Tells members of a group about a new chat message.
         /// </summary>
-        ChatMessage
+        ChatMessage,
+
+        /// <summary>
+        /// The user-ready update. Tells members of a group about a user's ready state change.
+        /// </summary>
+        UserReady
     }
 }

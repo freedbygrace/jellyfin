@@ -231,5 +231,19 @@ namespace MediaBrowser.Controller.SyncPlay
         /// </summary>
         /// <returns>The list of chat messages.</returns>
         IReadOnlyList<ChatMessageDto> GetChatMessages();
+
+        /// <summary>
+        /// Sets the ready state for a session.
+        /// </summary>
+        /// <param name="session">The session.</param>
+        /// <param name="isReady">Whether the session is ready.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        void SetReady(SessionInfo session, bool isReady, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Checks if all members in the group are ready.
+        /// </summary>
+        /// <returns><c>true</c> if all members are ready; <c>false</c> otherwise.</returns>
+        bool AreAllMembersReady();
     }
 }
