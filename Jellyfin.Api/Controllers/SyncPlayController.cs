@@ -129,6 +129,29 @@ public class SyncPlayController : BaseJellyfinApiController
     }
 
     /// <summary>
+    /// Gets detailed member information for a SyncPlay group.
+    /// </summary>
+    /// <param name="id">The id of the group.</param>
+    /// <response code="200">Member information returned.</response>
+    /// <response code="404">Group not found.</response>
+    /// <returns>An <see cref="IEnumerable{GroupMemberInfoDto}"/> containing detailed member information.</returns>
+    [HttpGet("{id:guid}/Members")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Policies.SyncPlayJoinGroup)]
+    public async Task<ActionResult<IEnumerable<GroupMemberInfoDto>>> SyncPlayGetGroupMembers([FromRoute] Guid id)
+    {
+        var currentSession = await RequestHelpers.GetSession(_sessionManager, _userManager, HttpContext).ConfigureAwait(false);
+        var group = _syncPlayManager.GetGroup(currentSession, id);
+        if (group is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(group.Members.AsEnumerable());
+    }
+
+    /// <summary>
     /// Request to set new playlist in SyncPlay group.
     /// </summary>
     /// <param name="requestData">The new playlist to play in the group.</param>

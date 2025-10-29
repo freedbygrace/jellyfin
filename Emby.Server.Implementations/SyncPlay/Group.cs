@@ -355,7 +355,13 @@ namespace Emby.Server.Implementations.SyncPlay
         public GroupInfoDto GetInfo()
         {
             var participants = _participants.Values.Select(session => session.UserName).Distinct().ToList();
-            return new GroupInfoDto(GroupId, GroupName, _state.Type, participants, DateTime.UtcNow);
+            var members = _participants.Values.Select(member => new GroupMemberInfoDto(
+                member.UserId,
+                member.UserName,
+                member.Ping,
+                member.IsBuffering,
+                !member.IsBuffering)).ToList();
+            return new GroupInfoDto(GroupId, GroupName, _state.Type, participants, DateTime.UtcNow, members);
         }
 
         /// <summary>

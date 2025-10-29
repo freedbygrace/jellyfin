@@ -23,6 +23,26 @@ namespace MediaBrowser.Model.SyncPlay
             State = state;
             Participants = participants;
             LastUpdatedAt = lastUpdatedAt;
+            Members = new List<GroupMemberInfoDto>();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="GroupInfoDto"/> class.
+        /// </summary>
+        /// <param name="groupId">The group identifier.</param>
+        /// <param name="groupName">The group name.</param>
+        /// <param name="state">The group state.</param>
+        /// <param name="participants">The participants.</param>
+        /// <param name="lastUpdatedAt">The date when this DTO has been created.</param>
+        /// <param name="members">The detailed member information.</param>
+        public GroupInfoDto(Guid groupId, string groupName, GroupStateType state, IReadOnlyList<string> participants, DateTime lastUpdatedAt, IReadOnlyList<GroupMemberInfoDto> members)
+        {
+            GroupId = groupId;
+            GroupName = groupName;
+            State = state;
+            Participants = participants;
+            LastUpdatedAt = lastUpdatedAt;
+            Members = members;
         }
 
         /// <summary>
@@ -54,5 +74,11 @@ namespace MediaBrowser.Model.SyncPlay
         /// </summary>
         /// <value>The date when this DTO has been created.</value>
         public DateTime LastUpdatedAt { get; }
+
+        /// <summary>
+        /// Gets the detailed member information.
+        /// </summary>
+        /// <value>The detailed member information.</value>
+        public IReadOnlyList<GroupMemberInfoDto> Members { get; }
     }
 }
